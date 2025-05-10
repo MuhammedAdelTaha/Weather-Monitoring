@@ -1,0 +1,178 @@
+networks:
+  weather-network:
+    name: weather-monitoring-network
+    driver: bridge
+
+volumes:
+  kafka_data:
+    name: kafka_data
+  zookeeper_data:
+    name: zookeeper_data
+
+services:
+  # ZooKeeper service for Kafka coordination
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    container_name: zookeeper
+    networks:
+      - weather-network
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper
+
+  # Kafka message broker for data streaming
+  kafka:
+    image: 'bitnami/kafka:latest'
+    container_name: kafka
+    networks:
+      - weather-network
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    volumes:
+      - kafka_data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+
+  # Weather stations (10 instances)
+  weather-station-1:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-1
+    environment:
+      - STATION_ID=1
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-2:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-2
+    environment:
+      - STATION_ID=2
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-3:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-3
+    environment:
+      - STATION_ID=3
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-4:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-4
+    environment:
+      - STATION_ID=4
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-5:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-5
+    environment:
+      - STATION_ID=5
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-6:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-6
+    environment:
+      - STATION_ID=6
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-7:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-7
+    environment:
+      - STATION_ID=7
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-8:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-8
+    environment:
+      - STATION_ID=8
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-9:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-9
+    environment:
+      - STATION_ID=9
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
+
+  weather-station-10:
+    build:
+      context: .
+      dockerfile: app/weather_station/Dockerfile
+    container_name: weather-station-10
+    environment:
+      - STATION_ID=10
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-network
