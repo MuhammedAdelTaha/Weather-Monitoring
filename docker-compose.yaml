@@ -1,7 +1,8 @@
 networks:
-  weather-network:
-    name: weather-monitoring-network
+  weather-monitoring:
+    name: "weather-monitoring"
     driver: bridge
+    external: true
 
 volumes:
   kafka_data:
@@ -15,7 +16,7 @@ services:
     image: 'bitnami/zookeeper:latest'
     container_name: zookeeper
     networks:
-      - weather-network
+      - weather-monitoring
     ports:
       - "2181:2181"
     environment:
@@ -28,7 +29,7 @@ services:
     image: 'bitnami/kafka:latest'
     container_name: kafka
     networks:
-      - weather-network
+      - weather-monitoring
     ports:
       - "9092:9092"
     environment:
@@ -49,8 +50,8 @@ services:
   # Weather stations (10 instances)
   weather-station-1:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-1
     environment:
       - STATION_ID=1
@@ -58,12 +59,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-2:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-2
     environment:
       - STATION_ID=2
@@ -71,12 +72,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-3:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-3
     environment:
       - STATION_ID=3
@@ -84,12 +85,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-4:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-4
     environment:
       - STATION_ID=4
@@ -97,12 +98,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-5:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-5
     environment:
       - STATION_ID=5
@@ -110,12 +111,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-6:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-6
     environment:
       - STATION_ID=6
@@ -123,12 +124,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-7:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-7
     environment:
       - STATION_ID=7
@@ -136,12 +137,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-8:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-8
     environment:
       - STATION_ID=8
@@ -149,12 +150,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-9:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-9
     environment:
       - STATION_ID=9
@@ -162,12 +163,12 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring
 
   weather-station-10:
     build:
-      context: .
-      dockerfile: app/weather_station/Dockerfile
+      context: app/weather_station
+      dockerfile: Dockerfile
     container_name: weather-station-10
     environment:
       - STATION_ID=10
@@ -175,4 +176,4 @@ services:
     depends_on:
       - kafka
     networks:
-      - weather-network
+      - weather-monitoring

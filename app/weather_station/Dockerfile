@@ -6,7 +6,7 @@ WORKDIR /app/weather_station
 RUN pip install confluent-kafka
 
 # Copy the weather station script
-COPY "app/weather_station/weather_station.py" .
+COPY weather_station.py .
 
 # Set default environment variables
 ENV STATION_ID=1
