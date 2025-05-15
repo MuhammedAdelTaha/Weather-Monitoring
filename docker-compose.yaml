@@ -157,3 +157,13 @@ services:
       - kafka
     networks:
       - weather-monitoring
+
+  rain-triggerer:
+    image: rain-triggerer
+    container_name: rain-triggerer
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - weather-monitoring
