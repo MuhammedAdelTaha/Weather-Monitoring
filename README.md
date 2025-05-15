@@ -84,6 +84,7 @@ cd inside the following pathes:
 - "/Weather-Monitoring/Weather-Station" 
 - "/Weather-Monitoring/Base-Central-Station"
 - "/Weather-Monitoring/Rain-Triggers"
+
 and run the following command in the terminal to create their images:
 
 ```bash
