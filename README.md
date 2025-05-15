@@ -79,7 +79,14 @@ curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
 * Copy the verification code and paste it into the Kibana enrollment prompt.
 * Log into Kibana using the `elastic` username and the previously stored password.
 
-### 8. **Start Other Containers Using Docker Compose**
+### 8. **Build Weather Station Image**
+go inside "/Weather-Monitoring/Weather-Station" and run the following command in the terminal to create the **Weather Station** image:
+
+```bash
+ mvn compile jib:dockerBuild
+```
+
+### 9. **Start Other Containers Using Docker Compose**
 To simplify the management of all services (ZooKeeper, Kafka, weather stations, etc.), use the docker-compose.yaml file. 
 This file includes configurations for the following services:
 
@@ -91,7 +98,7 @@ This file includes configurations for the following services:
 docker compose up -d
 ```
 
-### 9. **Stopping Everything**
+### 10. **Stopping Everything**
 To stop all running containers, run:
 
 ```bash
@@ -99,7 +106,7 @@ docker container stop elasticsearch kibana
 docker compose down
 ```
 
-### 10. **Starting Everything Again**
+### 11. **Starting Everything Again**
 To start all services again, run:
 
 ```bash
