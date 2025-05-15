@@ -79,8 +79,12 @@ curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
 * Copy the verification code and paste it into the Kibana enrollment prompt.
 * Log into Kibana using the `elastic` username and the previously stored password.
 
-### 8. **Build Weather Station Image**
-go inside "/Weather-Monitoring/Weather-Station" and run the following command in the terminal to create the **Weather Station** image:
+### 8. **Create the Required Images**
+cd inside the following pathes:
+-"/Weather-Monitoring/Weather-Station" 
+-"/Weather-Monitoring/Base-Central-Station"
+-"/Weather-Monitoring/Rain-Triggers"
+and run the following command in the terminal to create their images:
 
 ```bash
  mvn compile jib:dockerBuild
