@@ -49,6 +49,25 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <to>
+                        <image>weather-station</image>
+                    </to>
+                    <container>
+                        <mainClass>com.geekcap.javaworld.Main</mainClass>
+                        <environment>
+                            <STATION_ID>1</STATION_ID>
+                            <KAFKA_BOOTSTRAP_SERVERS>kafka:9092</KAFKA_BOOTSTRAP_SERVERS>
+                        </environment>
+                    </container>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 

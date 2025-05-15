@@ -49,10 +49,7 @@ services:
 
   # Weather stations (10 instances)
   weather-station-1:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-1
+    image: weather-station
     container_name: weather-station-1
     environment:
       - STATION_ID=1
@@ -63,10 +60,7 @@ services:
       - weather-monitoring
 
   weather-station-2:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-2
+    image: weather-station
     container_name: weather-station-2
     environment:
       - STATION_ID=2
@@ -77,10 +71,7 @@ services:
       - weather-monitoring
 
   weather-station-3:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-3
+    image: weather-station
     container_name: weather-station-3
     environment:
       - STATION_ID=3
@@ -91,10 +82,7 @@ services:
       - weather-monitoring
 
   weather-station-4:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-4
+    image: weather-station
     container_name: weather-station-4
     environment:
       - STATION_ID=4
@@ -105,10 +93,7 @@ services:
       - weather-monitoring
 
   weather-station-5:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-5
+    image: weather-station
     container_name: weather-station-5
     environment:
       - STATION_ID=5
@@ -119,10 +104,7 @@ services:
       - weather-monitoring
 
   weather-station-6:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-6
+    image: weather-station
     container_name: weather-station-6
     environment:
       - STATION_ID=6
@@ -133,10 +115,7 @@ services:
       - weather-monitoring
 
   weather-station-7:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-7
+    image: weather-station
     container_name: weather-station-7
     environment:
       - STATION_ID=7
@@ -147,10 +126,7 @@ services:
       - weather-monitoring
 
   weather-station-8:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-8
+    image: weather-station
     container_name: weather-station-8
     environment:
       - STATION_ID=8
@@ -161,10 +137,7 @@ services:
       - weather-monitoring
 
   weather-station-9:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-9
+    image: weather-station
     container_name: weather-station-9
     environment:
       - STATION_ID=9
@@ -175,10 +148,7 @@ services:
       - weather-monitoring
 
   weather-station-10:
-    build:
-      context: ./Weather-Station
-      dockerfile: Dockerfile
-    image: weather-station-10
+    image: weather-station
     container_name: weather-station-10
     environment:
       - STATION_ID=10
