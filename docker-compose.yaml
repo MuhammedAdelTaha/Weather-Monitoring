@@ -9,6 +9,8 @@ volumes:
     name: kafka_data
   zookeeper_data:
     name: zookeeper_data
+  bitcask_data:
+    name: bitcask_data
 
 services:
   # ZooKeeper service for Kafka coordination
@@ -165,5 +167,23 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       - kafka
+    networks:
+      - weather-monitoring
+
+  base-central-station:
+    image: base-central-station
+    container_name: base-central-station
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - APP_ID=central-station-app
+      - INPUT_TOPIC=weather-data
+      - BITCASK_DB_DIR=/data/bitcask_db
+      - SERVER_PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+    volumes:
+      - bitcask_data:/data/bitcask_db
     networks:
       - weather-monitoring
