@@ -1,5 +1,9 @@
 package org.example;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -7,65 +11,77 @@ import java.util.concurrent.*;
 import java.util.stream.StreamSupport;
 
 public class BitCask {
-    private static final int MAX_FILE_SIZE = 1024 * 1024 * 10; // 10 MB per segment file
+    private static final int MAX_FILE_SIZE = 1024 * 1024 * 10; // 10 MB
+    private static final Logger logger = LoggerFactory.getLogger(BitCask.class);
+    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final Path dataDir;
     private final Map<String, KeyDirEntry> keyDir = new ConcurrentHashMap<>();
     private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1);
     private RandomAccessFile currentFile;
+    private RandomAccessFile currentHintFile; // Added for hint files
     private int currentFileIndex;
     private final Object fileLock = new Object();
 
-    // Entry in the keyDir with file information
-    private static class KeyDirEntry {
-        final int fileIndex;
-        final long position;
+    private record KeyDirEntry(int fileIndex, long position, int valueSize) { }
 
-        KeyDirEntry(int fileIndex, long position) {
-            this.fileIndex = fileIndex;
-            this.position = position;
-        }
-    }
-
-    public BitCask(String dir) {
+    public BitCask(String dir) throws IOException {
         this.dataDir = Paths.get(dir);
-        try {
-            if (!Files.exists(dataDir)) {
-                Files.createDirectories(dataDir);
-            }
-
-            // Load existing data into keyDir
-            loadExistingData();
-
-            // Open the current segment for writing
-            currentFileIndex = getLatestFileIndex();
-            openNewSegment();
-
-            // Schedule compaction
-            scheduleCompaction();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to initialize BitCask", e);
+        if (!Files.exists(dataDir)) {
+            Files.createDirectories(dataDir);
         }
+        loadExistingData();
+        currentFileIndex = getLatestFileIndex();
+        openSegment(false);
+        scheduleCompaction();
     }
 
     private void loadExistingData() throws IOException {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataDir, "segment_*.log")) {
-            for (Path path : stream) {
-                String fileName = path.getFileName().toString();
-                int fileIndex = Integer.parseInt(fileName.replace("segment_", "").replace(".log", ""));
-
-                try (BufferedReader reader = Files.newBufferedReader(path)) {
+        // First try to load from hint files (faster)
+        logger.info("[{}] Starting to load from hint files.", LocalDateTime.now().format(dtf));
+        try (DirectoryStream<Path> hintStream = Files.newDirectoryStream(dataDir, "segment_*.hint")) {
+            for (Path hintPath : hintStream) {
+                try (BufferedReader reader = Files.newBufferedReader(hintPath)) {
                     String line;
-                    long position = 0;
                     while ((line = reader.readLine()) != null) {
-                        int commaPos = line.indexOf(',');
-                        if (commaPos > 0) {
-                            String key = line.substring(0, commaPos);
-                            keyDir.put(key, new KeyDirEntry(fileIndex, position));
+                        String[] parts = line.split(",");
+                        if (parts.length >= 4) {
+                            String key = parts[0];
+                            int fileIndex = Integer.parseInt(parts[1]);
+                            long position = Long.parseLong(parts[2]);
+                            int valueSize = Integer.parseInt(parts[3]);
+                            keyDir.put(key, new KeyDirEntry(fileIndex, position, valueSize));
                         }
-                        position += line.length() + 1; // +1 for newline
                     }
                 }
             }
+        }
+
+        // Fallback to scanning data files if no hints exist
+        if (keyDir.isEmpty()) {
+            logger.warn("[{}] No data loaded from hint files. Falling back to scanning log files.",LocalDateTime.now().format(dtf));
+            try (DirectoryStream<Path> dataStream = Files.newDirectoryStream(dataDir, "segment_*.log")) {
+                for (Path dataPath : dataStream) {
+                    String fileName = dataPath.getFileName().toString();
+                    int fileIndex = Integer.parseInt(fileName.replace("segment_", "").replace(".log", ""));
+
+                    try (BufferedReader reader = Files.newBufferedReader(dataPath)) {
+                        String line;
+                        long position = 0;
+                        while ((line = reader.readLine()) != null) {
+                            int commaPos = line.indexOf(',');
+                            if (commaPos > 0) {
+                                String key = line.substring(0, commaPos);
+                                String value = line.substring(commaPos + 1);
+                                keyDir.put(key, new KeyDirEntry(fileIndex, position, value.length()));
+                            }
+                            position += line.length() + 1; // +1 for newline
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            logger.info("[{}] data loaded from hint files.",LocalDateTime.now().format(dtf));
         }
     }
 
@@ -78,29 +94,48 @@ public class BitCask {
         }
     }
 
-    private void openNewSegment() throws IOException {
+    // create segment and hint files
+    private void openSegment(boolean openNewFile) throws IOException {
         synchronized (fileLock) {
-            if (currentFile != null) {
-                currentFile.close();
+            if (currentFile != null) currentFile.close();
+            if (currentHintFile != null) currentHintFile.close();
+
+            // Increment file index to open a new file
+            if (openNewFile) {
+                currentFileIndex++;
             }
-            currentFile = new RandomAccessFile(dataDir.resolve("segment_" + (++currentFileIndex) + ".log").toFile(), "rw");
-            currentFile.seek(currentFile.length()); // Move to end of file for appending
+
+            Path dataPath = dataDir.resolve("segment_" + currentFileIndex + ".log");
+            Path hintPath = dataDir.resolve("segment_" + currentFileIndex + ".hint");
+
+            currentFile = new RandomAccessFile(dataPath.toFile(), "rw");
+            currentHintFile = new RandomAccessFile(hintPath.toFile(), "rw");
+            currentFile.seek(currentFile.length());
+            currentHintFile.seek(currentHintFile.length());
         }
     }
 
+    // Modified to write hint entries
     public void put(String key, String value) {
         synchronized (fileLock) {
             try {
                 String entry = key + "," + value + "\n";
                 if (currentFile.length() + entry.length() > MAX_FILE_SIZE) {
-                    openNewSegment();
+                    openSegment(true);
                 }
+
                 long position = currentFile.length();
                 currentFile.seek(position);
                 currentFile.writeBytes(entry);
-                keyDir.put(key, new KeyDirEntry(currentFileIndex, position));
+
+                // Write to a hint file
+                String hintEntry = key + "," + currentFileIndex + "," + position + "," + value.length() + "\n";
+                currentHintFile.seek(currentHintFile.length());
+                currentHintFile.writeBytes(hintEntry);
+
+                keyDir.put(key, new KeyDirEntry(currentFileIndex, position, value.length()));
             } catch (IOException e) {
-                System.err.println("Failed to write data: " + e.getMessage());
+                logger.error("Failed to write data: {}", e.getMessage());
             }
         }
     }
@@ -127,7 +162,7 @@ public class BitCask {
                 return line.substring(commaPos + 1);
             }
         } catch (IOException e) {
-            System.err.println("Failed to read data: " + e.getMessage());
+            logger.error("Failed to read data: {}", e.getMessage());
             return null;
         }
     }
@@ -148,77 +183,71 @@ public class BitCask {
         compactionScheduler.scheduleAtFixedRate(this::compact, 60, 60, TimeUnit.SECONDS);
     }
 
+    // Modified compaction to handle hint files
+
     private void compact() {
         synchronized (fileLock) {
             try {
-                System.out.println("Starting compaction...");
-                Path compactedFile = dataDir.resolve("compacted.log");
+                logger.info("[{}] Starting compaction...", LocalDateTime.now().format(dtf));
+                int newFileIndex = currentFileIndex + 1;
+                Path tempData = Files.createTempFile(dataDir, "compacted_", ".log");
+                Path tempHint = Files.createTempFile(dataDir, "compacted_", ".hint");
 
-                // Write all current key-value pairs to new file
-                try (BufferedWriter writer = Files.newBufferedWriter(compactedFile)) {
-                    for (String key : keyDir.keySet()) {
+                try (RandomAccessFile newDataFile = new RandomAccessFile(tempData.toFile(), "rw");
+                     RandomAccessFile newHintFile = new RandomAccessFile(tempHint.toFile(), "rw")) {
+
+                    for (Map.Entry<String, KeyDirEntry> entry : keyDir.entrySet()) {
+                        String key = entry.getKey();
                         String value = get(key);
                         if (value != null) {
-                            writer.write(key + "," + value + "\n");
+                            // Write to a new data file
+                            String dataEntry = key + "," + value + "\n";
+                            long position = newDataFile.getFilePointer();
+                            newDataFile.writeBytes(dataEntry);
+
+                            // Update keyDir and write to a hint file
+                            KeyDirEntry newEntry = new KeyDirEntry(newFileIndex, position, value.length());
+                            keyDir.put(key, newEntry);
+
+                            String hintEntry = key + "," + newFileIndex + "," + position + "," + value.length() + "\n";
+                            newHintFile.writeBytes(hintEntry);
                         }
                     }
                 }
 
-                // Close current file and collect old segment files
+                // Close current files
                 currentFile.close();
-                List<Path> oldSegments = new ArrayList<>();
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataDir, "segment_*.log")) {
-                    for (Path path : stream) {
-                        oldSegments.add(path);
+                currentHintFile.close();
+
+                // Rename temp files to new segment files
+                Path newDataPath = dataDir.resolve("segment_" + newFileIndex + ".log");
+                Path newHintPath = dataDir.resolve("segment_" + newFileIndex + ".hint");
+                Files.move(tempData, newDataPath, StandardCopyOption.REPLACE_EXISTING);
+                Files.move(tempHint, newHintPath, StandardCopyOption.REPLACE_EXISTING);
+
+                // Delete old files
+                try (DirectoryStream<Path> oldFiles = Files.newDirectoryStream(dataDir,
+                        path -> {
+                            String name = path.getFileName().toString();
+                            return name.matches("segment_\\d+\\.(log|hint)") &&
+                                    !name.equals(newDataPath.getFileName().toString()) &&
+                                    !name.equals(newHintPath.getFileName().toString());
+                        })) {
+                    for (Path oldFile : oldFiles) {
+                        Files.delete(oldFile);
                     }
                 }
 
-                // Move compacted file to new segment
-                Files.move(compactedFile, dataDir.resolve("segment_" + (++currentFileIndex) + ".log"),
-                        StandardCopyOption.REPLACE_EXISTING);
-
-                // Update keyDir with new positions
-                Map<String, KeyDirEntry> newKeyDir = new ConcurrentHashMap<>();
-                long position = 0;
-
-                try (BufferedReader reader = Files.newBufferedReader(
-                        dataDir.resolve("segment_" + currentFileIndex + ".log"))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        int commaPos = line.indexOf(',');
-                        if (commaPos > 0) {
-                            String key = line.substring(0, commaPos);
-                            newKeyDir.put(key, new KeyDirEntry(currentFileIndex, position));
-                        }
-                        position += line.length() + 1; // +1 for newline
-                    }
-                }
-
-                // Replace keyDir with new positions
-                keyDir.clear();
-                keyDir.putAll(newKeyDir);
-
-                // Open new segment file
-                openNewSegment();
-
-                // Delete old segment files
-                for (Path oldSegment : oldSegments) {
-                    try {
-                        Files.deleteIfExists(oldSegment);
-                    } catch (IOException e) {
-                        System.err.println("Failed to delete old segment: " + oldSegment);
-                    }
-                }
-
-                System.out.println("Compaction completed.");
+                // Update current file index and open new segment
+                currentFileIndex = newFileIndex;
+                openSegment(false);
+                logger.info("[{}] compaction completed...", LocalDateTime.now().format(dtf));
             } catch (IOException e) {
-                System.err.println("Compaction failed: " + e.getMessage());
-
-                // Try to reopen current segment if compaction failed
+                logger.error("Compaction failed: {}", e.getMessage());
                 try {
-                    openNewSegment();
-                } catch (IOException reopenEx) {
-                    System.err.println("Failed to reopen segment after compaction failure: " + reopenEx.getMessage());
+                    openSegment(false);
+                } catch (IOException ex) {
+                    logger.error("Failed to reopen segment: {}", ex.getMessage());
                 }
             }
         }
@@ -232,7 +261,7 @@ public class BitCask {
                 currentFile.close();
             }
         } catch (IOException e) {
-            System.err.println("Error closing files during shutdown: " + e.getMessage());
+            logger.error("Error closing files during shutdown: {}", e.getMessage());
         }
     }
 }

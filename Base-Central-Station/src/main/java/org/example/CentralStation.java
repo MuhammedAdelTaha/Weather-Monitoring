@@ -6,7 +6,10 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Properties;
 
 public class CentralStation {
@@ -17,8 +20,9 @@ public class CentralStation {
     private final String databaseDir;
     private final BitCask bitCask;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(CentralStation.class);
 
-    public CentralStation(String kafkaBootstrapServers, String applicationId, String inputTopic, String databaseDir) {
+    public CentralStation(String kafkaBootstrapServers, String applicationId, String inputTopic, String databaseDir) throws IOException {
         this.kafkaBootstrapServers = kafkaBootstrapServers;
         this.applicationId = applicationId;
         this.inputTopic = inputTopic;
@@ -42,15 +46,15 @@ public class CentralStation {
                 int stationId = jsonNode.get("stationId").asInt();
                 String weatherStatus = jsonNode.toString();
                 bitCask.put(String.valueOf(stationId), weatherStatus);
-                System.out.println("Stored data for station " + stationId);
+                logger.info("Stored data for station {}", stationId);
             } catch (Exception e) {
-                System.err.println("Error processing message: " + e.getMessage());
+                logger.error("Error processing message: {}", e.getMessage());
             }
         });
 
         KafkaStreams streams = new KafkaStreams(builder.build(), config);
         streams.start();
-        System.out.println("Kafka Streams started...");
+        logger.error("Kafka Streams started...");
     }
 
     public BitCask getBitCask() {

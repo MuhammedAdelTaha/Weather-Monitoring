@@ -1,6 +1,5 @@
 package org.example;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.bundled.CorsPluginConfig;
@@ -11,7 +10,6 @@ public class CentralStationServer {
 
     private final int port;
     private final BitCask bitCask;
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private Javalin server;
 
     public CentralStationServer(int port, BitCask bitCask) {
@@ -22,9 +20,7 @@ public class CentralStationServer {
     public void start() {
         server = Javalin.create(config -> {
             config.http.defaultContentType = "application/json";
-            config.plugins.enableCors(cors -> {
-                cors.add(CorsPluginConfig::anyHost);
-            });
+            config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
         });
 
         server.get("/stations", this::handleGetAllStations);
@@ -57,6 +53,7 @@ public class CentralStationServer {
     public void stop() {
         if (server != null) {
             server.stop();
+            bitCask.shutdown();
         }
     }
 }
