@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
 public class BitCask {
     private static final int MAX_FILE_SIZE = 1024 * 1024 * 10; // 10 MB
     private static final Logger logger = LoggerFactory.getLogger(BitCask.class);
-    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private final Path dataDir;
     private final Map<String, KeyDirEntry> keyDir = new ConcurrentHashMap<>();
     private final ScheduledExecutorService compactionScheduler = Executors.newScheduledThreadPool(1);
