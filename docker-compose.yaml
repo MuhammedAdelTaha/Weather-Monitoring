@@ -58,6 +58,7 @@ services:
     image: weather-station
     container_name: weather-station-1
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=1
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -69,6 +70,7 @@ services:
     image: weather-station
     container_name: weather-station-2
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=2
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -80,6 +82,7 @@ services:
     image: weather-station
     container_name: weather-station-3
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=3
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -91,6 +94,7 @@ services:
     image: weather-station
     container_name: weather-station-4
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=4
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -102,6 +106,7 @@ services:
     image: weather-station
     container_name: weather-station-5
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=5
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -113,6 +118,7 @@ services:
     image: weather-station
     container_name: weather-station-6
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=6
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -124,6 +130,7 @@ services:
     image: weather-station
     container_name: weather-station-7
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=7
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -135,6 +142,7 @@ services:
     image: weather-station
     container_name: weather-station-8
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=8
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -146,6 +154,7 @@ services:
     image: weather-station
     container_name: weather-station-9
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=9
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -157,6 +166,7 @@ services:
     image: weather-station
     container_name: weather-station-10
     environment:
+      - TZ=Africa/Cairo
       - STATION_ID=10
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
@@ -168,6 +178,7 @@ services:
     image: rain-triggerer
     container_name: rain-triggerer
     environment:
+      - TZ=Africa/Cairo
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       - kafka
@@ -178,6 +189,7 @@ services:
     image: base-central-station
     container_name: base-central-station
     environment:
+      - TZ=Africa/Cairo
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - APP_ID=central-station-app
       - INPUT_TOPIC=weather-data
