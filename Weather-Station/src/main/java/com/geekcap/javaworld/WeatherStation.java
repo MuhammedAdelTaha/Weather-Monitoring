@@ -122,7 +122,7 @@ public class WeatherStation {
         message.stationId = this.stationId;
         message.sequenceNumber = this.sequenceNumber;
         message.batteryStatus = batteryStatus;
-        message.statusTimestamp = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond();
+        message.statusTimestamp = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond() * 1000L;
         message.weather = weather;
 
         return message;

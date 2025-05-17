@@ -121,7 +121,7 @@ public class ParquetArchiver {
 
     private String getPartitionKey(GenericRecord record) {
         long timestamp = (Long) record.get("status_timestamp");
-        LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault());
+        LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
         String dateStr = dt.format(DATE_FORMAT);
         int hour = dt.getHour();
         long stationId = (Long) record.get("station_id");
@@ -130,7 +130,7 @@ public class ParquetArchiver {
 
     private Path buildFilePath(GenericRecord record) {
         long timestamp = (Long) record.get("status_timestamp");
-        LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault());
+        LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
         String dateStr = dt.format(DATE_FORMAT);
         int hour = dt.getHour();
         long stationId = (Long) record.get("station_id");
