@@ -33,3 +33,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### ours ###
+/Weather-Client/parquet-env
+/Weather-Client/data.parquet
+/Weather-Client/main.py

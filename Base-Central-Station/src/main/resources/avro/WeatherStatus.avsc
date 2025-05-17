@@ -1,0 +1,26 @@
+{
+  "type": "record",
+  "name": "WeatherStatus",
+  "fields": [
+    {"name": "station_id", "type": "long"},
+    {"name": "s_no", "type": "long"},
+    {"name": "battery_status", "type": {
+      "type": "enum",
+      "name": "BatteryStatus",
+      "symbols": ["low", "medium", "high"]
+    }},
+    {"name": "status_timestamp", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+    {
+      "name": "weather",
+      "type": {
+        "type": "record",
+        "name": "WeatherData",
+        "fields": [
+          {"name": "humidity", "type": "int"},
+          {"name": "temperature", "type": "int"},
+          {"name": "wind_speed", "type": "int"}
+        ]
+      }
+    }
+  ]
+}

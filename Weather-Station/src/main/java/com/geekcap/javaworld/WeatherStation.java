@@ -1,5 +1,7 @@
 package com.geekcap.javaworld;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -120,7 +122,7 @@ public class WeatherStation {
         message.stationId = this.stationId;
         message.sequenceNumber = this.sequenceNumber;
         message.batteryStatus = batteryStatus;
-        message.statusTimestamp = System.currentTimeMillis() / 1000;
+        message.statusTimestamp = ZonedDateTime.now(ZoneId.systemDefault()).toEpochSecond();
         message.weather = weather;
 
         return message;

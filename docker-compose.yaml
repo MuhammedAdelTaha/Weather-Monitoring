@@ -13,6 +13,8 @@ volumes:
     name: bitcask_data
   jfr_data:
     name: centralstation_jfr
+  parquet_archive:
+    name: parquet_archive
 
 services:
   # ZooKeeper service for Kafka coordination
@@ -181,13 +183,15 @@ services:
       - INPUT_TOPIC=weather-data
       - BITCASK_DB_DIR=/data/bitcask_db
       - SERVER_PORT=8080
-      - JAVA_TOOL_OPTIONS=-XX:+FlightRecorder -XX:StartFlightRecording=settings=profile,delay=10s,duration=120s,filename=/jfr/centralstation.jfr,maxsize=200M,maxage=24h
+      - JAVA_TOOL_OPTIONS=-XX:+FlightRecorder -XX:StartFlightRecording=settings=profile,delay=60s,duration=120s,filename=/jfr/centralstation.jfr,maxsize=200M,maxage=24h
+      - ARCHIVE_DIR=/data/parquet_archive
     ports:
       - "8080:8080"
     depends_on:
       - kafka
     volumes:
       - bitcask_data:/data/bitcask_db
+      - parquet_archive:/data/parquet_archive
       - jfr_data:/jfr
     networks:
       - weather-monitoring
