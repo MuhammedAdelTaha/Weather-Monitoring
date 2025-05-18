@@ -3,6 +3,8 @@ package org.example;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.bundled.CorsPluginConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -11,6 +13,7 @@ public class CentralStationServer {
     private final int port;
     private final BitCask bitCask;
     private Javalin server;
+    private static final Logger logger = LoggerFactory.getLogger(CentralStationServer.class);
 
     public CentralStationServer(int port, BitCask bitCask) {
         this.port = port;
@@ -27,7 +30,7 @@ public class CentralStationServer {
         server.get("/station", this::handleGetStation);
 
         server.start(port);
-        System.out.println("Central Station HTTP Server started on port " + port);
+        logger.info("Central Station HTTP Server started on port {}",port);
     }
 
     private void handleGetAllStations(Context ctx) {
@@ -45,8 +48,10 @@ public class CentralStationServer {
         String data = bitCask.get(stationId);
         if (data == null) {
             ctx.status(404).json(Map.of("error", "Station not found"));
+            logger.info("Station {} not found", stationId);
         } else {
             ctx.json(data);
+            logger.info("Got the weather data");
         }
     }
 
