@@ -23,7 +23,9 @@ public class CentralStationServer {
     public void start() {
         server = Javalin.create(config -> {
             config.http.defaultContentType = "application/json";
-            config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
+            config.bundledPlugins.enableCors(cors -> {
+                cors.addRule(CorsPluginConfig.CorsRule::anyHost);
+            });
         });
 
         server.get("/stations", this::handleGetAllStations);

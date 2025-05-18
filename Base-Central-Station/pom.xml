@@ -13,9 +13,10 @@
         <maven.compiler.source>17</maven.compiler.source>  <!-- Updated from 11 -->
         <maven.compiler.target>17</maven.compiler.target>
         <kafka.version>3.7.1</kafka.version>
-        <javalin.version>5.6.2</javalin.version>
+        <javalin.version>6.4.0</javalin.version>
         <jackson.version>2.15.2</jackson.version>
         <slf4j.version>2.0.5</slf4j.version>
+        <jetty.version>11.0.24</jetty.version>
         <jib.version>3.4.5</jib.version>
     </properties>
 
@@ -43,6 +44,39 @@
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Explicitly set Jetty dependencies -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-webapp</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-xml</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
 
         <!-- JSON -->

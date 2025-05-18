@@ -70,7 +70,7 @@ public class CentralStation {
                 GenericRecord record = convertToAvro((ObjectNode) jsonNode);
                 parquetArchiver.archive(record);
 
-                logger.debug("Processed data for station {}", stationId);
+                logger.info("Processed data for station {}", stationId);
             } catch (Exception e) {
                 logger.error("Error processing message: {}", e.getMessage());
             }
