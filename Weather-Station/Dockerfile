@@ -20,7 +20,7 @@ FROM openjdk:11-jre-slim
 WORKDIR /app
 
 # Copy the built jar file from the build stage
-COPY --from=build /app/target/weather-station-1.0-SNAPSHOT.jar ./app.jar
+COPY --from=build /app/target/Weather-Station-1.0-SNAPSHOT.jar ./app.jar
 # Copy the dependencies
 COPY --from=build /app/target/lib/ ./lib/
 

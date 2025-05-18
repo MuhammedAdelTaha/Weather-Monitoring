@@ -57,9 +57,9 @@ def perf_test(num_clients):
                 for key, value in data.items():
                     writer.writerow([key, value])
                     
-            return (thread_num, True)
-        except Exception as e:
-            return (thread_num, False)
+            return thread_num, True
+        except requests.exceptions.RequestException as _:
+            return thread_num, False
 
     print(f"Starting performance test with {num_clients} clients...")
     start_time = time.time()
@@ -73,7 +73,8 @@ def perf_test(num_clients):
     print(f"\nPerformance test completed in {duration:.2f} seconds")
     print(f"Successful requests: {success}/{num_clients}")
 
-if __name__ == "__main__":
+
+def main():
     if len(sys.argv) < 2:
         print("Usage:")
         print("  ./bitcask_client.py --view-all")
@@ -104,3 +105,7 @@ if __name__ == "__main__":
     else:
         print(f"Unknown command: {command}", file=sys.stderr)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -35,6 +35,6 @@ build/
 .DS_Store
 
 ### ours ###
-/Weather-Client/parquet-env
-/Weather-Client/data.parquet
-/Weather-Client/main.py
+/Weather-Station/Weather-Client/parquet-env
+/Weather-Station/Weather-Client/data.parquet
+/Weather-Station/Weather-Client/main.py

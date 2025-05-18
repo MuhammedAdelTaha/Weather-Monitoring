@@ -80,10 +80,10 @@ curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
 * Log into Kibana using the `elastic` username and the previously stored password.
 
 ### 8. **Create the Required Images**
-cd inside the following pathes:
+cd inside the following paths:
 - "/Weather-Monitoring/Weather-Station" 
 - "/Weather-Monitoring/Base-Central-Station"
-- "/Weather-Monitoring/Rain-Triggers"
+- "/Weather-Monitoring/Rain-Detector"
 
 and run the following command in the terminal to create their images:
 
