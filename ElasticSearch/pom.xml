@@ -72,13 +72,7 @@
         <scope>provided</scope>  <!-- Mark as optional -->
     </dependency>
 
-    <!-- Elasticsearch client -->
-<!--    <dependency>-->
-<!--        <groupId>co.elastic.clients</groupId>-->
-<!--        <artifactId>elasticsearch-java</artifactId>-->
-<!--        <version>8.12.0</version>-->
-<!--    </dependency>-->
-<!--    &lt;!&ndash; Parquet processing &ndash;&gt;-->
+
     <dependency>
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-avro</artifactId>
