@@ -18,8 +18,8 @@
         <jackson.version>2.15.3</jackson.version>
         <slf4j.version>2.0.12</slf4j.version>
         <logback.version>1.4.14</logback.version>
-        <parquet.version>1.12.3</parquet.version>
-        <hadoop.version>3.3.1</hadoop.version>
+        <parquet.version>1.15.2</parquet.version>
+        <hadoop.version>3.3.6</hadoop.version>
         <avro.version>1.11.3</avro.version>
         <spark.version>3.5.0</spark.version>
         <scala.binary.version>2.13</scala.binary.version>

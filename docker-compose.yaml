@@ -13,8 +13,10 @@ volumes:
     name: bitcask_data
   jfr_data:
     name: centralstation_jfr
-  parquet_archive:
-    name: parquet_archive
+#  parquet_archive:
+#    name: parquet_archive
+  es_data:
+    name: es_data
 
 services:
   # ZooKeeper service for Kafka coordination
@@ -217,7 +219,42 @@ services:
       - kafka
     volumes:
       - bitcask_data:/data/bitcask_db
-      - parquet_archive:/data/parquet_archive
+#      - parquet_archive:/data/parquet_archive
+      - ./parquet_data:/data/parquet_archive
       - jfr_data:/jfr
     networks:
       - weather-monitoring
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_HOST=0.0.0.0  # Allow external access
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -f http://localhost:5601/api/status || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
