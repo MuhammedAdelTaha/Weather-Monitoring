@@ -1,5 +1,6 @@
 package org.example;
 
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
@@ -168,16 +169,42 @@ public class SparkParquetStreamingToElasticsearch {
         query.awaitTermination();
     }
 
-    private void sendBulkRequest(List<BulkOperation> bulkOps) throws IOException {
-        BulkRequest bulkRequest = new BulkRequest.Builder()
-                .operations(bulkOps)
+    private void sendBulkRequest(List<BulkOperation> operations) {
+        BulkRequest request = new BulkRequest.Builder()
+                .operations(operations)
                 .build();
-
-        BulkResponse response = esClient.bulk(bulkRequest);
-
-        if (response.errors()) {
-            logger.error("Bulk indexing errors occurred: {}", response.items());
+        int attemptCount = 0;
+        final int MAX_ATTEMPTS = 3;
+        final long RETRY_DELAY_MILLIS = 500;
+        while (attemptCount < MAX_ATTEMPTS) {
+            try {
+                BulkResponse response = esClient.bulk(request);
+                if (response.errors()) {
+                    logger.error("Bulk indexing errors occurred: {}", response.items());
+                }
+                return; // success, exit
+            } catch (ElasticsearchException e) {
+                attemptCount++;
+                logger.warn("Bulk indexing request failed (attempt {}), retrying in {}ms...", attemptCount, RETRY_DELAY_MILLIS, e);
+                try {
+                    Thread.sleep(RETRY_DELAY_MILLIS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(ie);
+                }
+            } catch (Exception e) {
+                attemptCount++;
+                logger.error("Unexpected error during bulk indexing (attempt {}), retrying in {}ms...", attemptCount, RETRY_DELAY_MILLIS, e);
+                try {
+                    Thread.sleep(RETRY_DELAY_MILLIS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(ie);
+                }
+            }
         }
+        // Final failure — log and continue
+        logger.error("All bulk indexing request attempts failed after {} attempts", MAX_ATTEMPTS);
     }
 
     public void close() throws IOException {
