@@ -50,20 +50,16 @@ public class WeatherStation {
                         sequenceNumber++;
                         continue;
                     }
-
                     // Create weather message
                     WeatherMessage message = createWeatherMessage();
-
                     // Convert message to JSON string
                     String messageJson = objectMapper.writeValueAsString(message);
-
                     // Send message to Kafka
                     ProducerRecord<String, String> record = new ProducerRecord<>(
                             topic,
                             String.valueOf(stationId),
                             messageJson
                     );
-
                     producer.send(record, (metadata, e) -> {
                         if (e != null)
                             System.out.println("Message delivery failed: " + e.getMessage());
