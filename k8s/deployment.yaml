@@ -67,6 +67,7 @@ spec:
           image: bitnami/kafka:latest
           ports:
             - containerPort: 9092
+            - containerPort: 9093
           env:
             - name: KAFKA_CFG_NODE_ID
               value: "0"
