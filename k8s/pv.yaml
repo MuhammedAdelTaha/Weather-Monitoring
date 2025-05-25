@@ -4,7 +4,7 @@ metadata:
   name: my-pv
 spec:
   capacity:
-    storage: 25Gi
+    storage: 30Gi
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
