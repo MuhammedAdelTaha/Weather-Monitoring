@@ -1,0 +1,250 @@
+---
+# Zookeeper
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  labels:
+    app: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      containers:
+        - name: zookeeper
+          image: bitnami/zookeeper:latest
+          ports:
+            - containerPort: 2181
+          env:
+            - name: ALLOW_ANONYMOUS_LOGIN
+              value: "yes"
+          volumeMounts:
+            - name: zookeeper-data
+              mountPath: /bitnami/zookeeper
+      volumes:
+        - name: zookeeper-data
+          persistentVolumeClaim:
+            claimName: zookeeper-pvc
+
+# zookeeper:
+#   image: 'bitnami/zookeeper:latest'
+#   container_name: zookeeper
+#   networks:
+#     - weather-monitoring
+#   ports:
+#     - "2181:2181"
+#   environment:
+#     - ALLOW_ANONYMOUS_LOGIN=yes
+#   volumes:
+#     - zookeeper_data:/bitnami/zookeeper
+
+---
+# Kafka
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  labels:
+    app: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: bitnami/kafka:latest
+          ports:
+            - containerPort: 9092
+            - containerPort: 9093
+          env:
+            - name: KAFKA_CFG_NODE_ID
+              value: "0"
+            - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
+              value: "true"
+            - name: KAFKA_CFG_PROCESS_ROLES
+              value: "controller,broker"
+            - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+              value: "zookeeper:2181"
+            - name: KAFKA_CFG_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_CFG_CONTROLLER_QUORUM_VOTERS
+              value: "0@kafka:9093"
+            - name: KAFKA_CFG_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka:9092"
+            - name: KAFKA_CFG_LISTENERS
+              value: "PLAINTEXT://:9092,CONTROLLER://:9093"
+            - name: KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /bitnami/kafka
+      volumes:
+        - name: kafka-data
+          persistentVolumeClaim:
+            claimName: kafka-pvc
+
+---
+# Base Central Station
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: base-central-station
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: base-central-station
+  template:
+    metadata:
+      labels:
+        app: base-central-station
+    spec:
+      containers:
+        - name: base-central-station
+          image: base-central-station
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: TZ
+              value: "Africa/Cairo"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: APP_ID
+              value: "central-station-app"
+            - name: INPUT_TOPIC
+              value: "weather-data"
+            - name: BITCASK_DB_DIR
+              value: "/data/bitcask_db"
+            - name: SERVER_PORT
+              value: "8080"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:+FlightRecorder -XX:StartFlightRecording=settings=profile,delay=60s,duration=120s,filename=/jfr/centralstation.jfr,maxsize=200M,maxage=24h"
+            - name: ARCHIVE_DIR
+              value: "/data/parquet_archive"
+          volumeMounts:
+            - name: bitcask-data
+              mountPath: /data/bitcask_db
+            - name: parquet-archive
+              mountPath: /data/parquet_archive
+            - name: jfr-data
+              mountPath: /jfr
+      volumes:
+        - name: bitcask-data
+          persistentVolumeClaim:
+            claimName: bitcask-pvc
+        - name: parquet-archive
+          persistentVolumeClaim:
+            claimName: parquet-archive-pvc
+        - name: jfr-data
+          persistentVolumeClaim:
+            claimName: jfr-data-pvc
+
+---
+# Weather Station
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: weather-station
+spec:
+  selector:
+    matchLabels:
+      run: weather-station
+  replicas: 10
+  template:
+    metadata:
+      labels:
+        run: weather-station
+    spec:
+      containers:
+      - name: weather-station
+        image: weather-station
+        imagePullPolicy: Never
+        env:
+          - name: STATION_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: TZ
+            value: "Africa/Cairo"
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: "kafka:9092"
+
+---
+# Elasticsearch Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  labels:
+    app: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:9.0.0
+          ports:
+            - containerPort: 9200
+          env:
+            - name: discovery.type
+              value: "single-node"
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx512m"
+            - name: xpack.security.enabled
+              value: "false"
+          volumeMounts:
+            - name: es-data
+              mountPath: /usr/share/elasticsearch/data
+      volumes:
+        - name: es-data
+          persistentVolumeClaim:
+            claimName: es-data-pvc
+
+---
+# Kibana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  labels:
+    app: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:9.0.0
+          ports:
+            - containerPort: 5601
+          env:
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch:9200"
+            - name: SERVER_HOST
+              value: "0.0.0.0"
